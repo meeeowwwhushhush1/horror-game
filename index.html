@@ -3,85 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Horror Game</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      background: #050505;
-      color: white;
-      font-family: Arial, sans-serif;
-      height: 100vh;
-      overflow: hidden;
-    }
-
-    #game {
-      width: 100%;
-      height: 100vh;
-      position: relative;
-      background:
-        radial-gradient(circle at center, #202020 0%, #080808 55%, #000 100%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #title {
-      text-align: center;
-    }
-
-    #title h1 {
-      font-size: 45px;
-      letter-spacing: 8px;
-      margin: 0 0 15px;
-    }
-
-    #title p {
-      color: #aaa;
-      font-size: 16px;
-    }
-
-    #startBtn {
-      margin-top: 25px;
-      padding: 15px 45px;
-      background: #111;
-      color: white;
-      border: 1px solid #777;
-      border-radius: 5px;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    #startBtn:active {
-      transform: scale(0.96);
-    }
-  </style>
+  <title>The House</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div id="game">
-
-    <div id="title">
-      <h1>THE HOUSE</h1>
-      <p>Something is waiting inside...</p>
-      <button id="startBtn">START GAME</button>
-    </div>
-
+  <div id="menu">
+    <h1>THE HOUSE</h1>
+    <p>Find a way out.</p>
+    <button id="start">ENTER THE HOUSE</button>
   </div>
 
-  <script>
-    document.getElementById("startBtn").onclick = function() {
-      document.getElementById("title").innerHTML = `
-        <h1>YOU ARE INSIDE</h1>
-        <p>Find a way out.</p>
-      `;
-    };
-  </script>
+  <div id="gameUI">
+    <div id="crosshair">+</div>
+    <div id="message">Find the exit...</div>
+
+    <div id="controls">
+      <button id="up">▲</button>
+      <div>
+        <button id="left">◀</button>
+        <button id="down">▼</button>
+        <button id="right">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.min.js"></script>
+  <script src="game.js"></script>
 
 </body>
 </html>
