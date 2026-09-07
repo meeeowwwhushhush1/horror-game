@@ -52,7 +52,7 @@ function createGame() {
   // VERY SMALL AMBIENT LIGHT
   const ambient = new THREE.AmbientLight(
     0xffffff,
-    0.03
+    0.25
   );
 
   scene.add(ambient);
