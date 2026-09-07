@@ -1,6 +1,8 @@
 let scene, camera, renderer;
 let keys = {};
+
 let flashlight;
+let flashlightTarget;
 
 const speed = 0.08;
 
@@ -18,9 +20,10 @@ function createGame() {
 
   scene = new THREE.Scene();
 
-  scene.background = new THREE.Color(0x020202);
-  scene.fog = new THREE.Fog(0x020202, 1, 20);
+  scene.background = new THREE.Color(0x010101);
+  scene.fog = new THREE.Fog(0x010101, 1, 20);
 
+  // CAMERA
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -30,43 +33,60 @@ function createGame() {
 
   camera.position.set(0, 1.6, 5);
 
+  // RENDERER
   renderer = new THREE.WebGLRenderer({
     antialias: true
   });
 
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+  );
+
+  renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+  );
 
   document.body.appendChild(renderer.domElement);
 
-  // VERY DARK AMBIENT LIGHT
-  const ambient = new THREE.AmbientLight(0xffffff, 0.04);
+  // VERY SMALL AMBIENT LIGHT
+  const ambient = new THREE.AmbientLight(
+    0xffffff,
+    0.03
+  );
+
   scene.add(ambient);
 
+  // =========================
   // FLASHLIGHT
+  // =========================
+
   flashlight = new THREE.SpotLight(
     0xffffff,
-    8,
-    20,
-    Math.PI / 6,
-    0.5,
+    15,
+    25,
+    Math.PI / 7,
+    0.35,
     1
   );
 
-  flashlight.position.set(0, 1.6, 0);
+  flashlight.position.copy(camera.position);
 
-  flashlight.target.position.set(0, 1.6, -10);
+  flashlightTarget = new THREE.Object3D();
 
-  camera.add(flashlight);
-  camera.add(flashlight.target);
+  scene.add(flashlight);
+  scene.add(flashlightTarget);
 
-  scene.add(camera);
+  flashlight.target = flashlightTarget;
 
+  // =========================
   // FLOOR
+  // =========================
+
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(30, 30),
     new THREE.MeshStandardMaterial({
-      color: 0x333333
+      color: 0x303030
     })
   );
 
@@ -74,7 +94,10 @@ function createGame() {
 
   scene.add(floor);
 
-  // HOUSE WALLS
+  // =========================
+  // HOUSE
+  // =========================
+
   createWall(0, 2, -8, 16, 4);
   createWall(-8, 2, 0, 4, 16);
   createWall(8, 2, 0, 4, 16);
@@ -112,13 +135,23 @@ function createGame() {
   setupMobileControls();
   setupFlashlight();
 
-  document.getElementById("message").textContent =
-    "Find a way out...";
+  document.getElementById(
+    "message"
+  ).textContent = "Find a way out...";
 }
 
 
-// CREATE WALL
-function createWall(x, y, z, width, depth) {
+// =========================
+// WALL
+// =========================
+
+function createWall(
+  x,
+  y,
+  z,
+  width,
+  depth
+) {
 
   const wall = new THREE.Mesh(
     new THREE.BoxGeometry(
@@ -138,7 +171,10 @@ function createWall(x, y, z, width, depth) {
 }
 
 
-// CREATE OBJECT
+// =========================
+// OBJECT
+// =========================
+
 function createBox(
   x,
   y,
@@ -167,29 +203,42 @@ function createBox(
 }
 
 
+// =========================
 // KEYBOARD
+// =========================
+
 function setupKeyboard() {
 
-  window.addEventListener("keydown", function(e) {
+  window.addEventListener(
+    "keydown",
+    function(e) {
 
-    keys[e.key.toLowerCase()] = true;
+      keys[e.key.toLowerCase()] = true;
 
-    // F = flashlight
-    if (e.key.toLowerCase() === "f") {
-      toggleFlashlight();
+      if (
+        e.key.toLowerCase() === "f"
+      ) {
+        toggleFlashlight();
+      }
+
     }
+  );
 
-  });
+  window.addEventListener(
+    "keyup",
+    function(e) {
 
-  window.addEventListener("keyup", function(e) {
+      keys[e.key.toLowerCase()] = false;
 
-    keys[e.key.toLowerCase()] = false;
-
-  });
+    }
+  );
 }
 
 
-// MOBILE MOVEMENT
+// =========================
+// MOBILE CONTROLS
+// =========================
+
 function setupMobileControls() {
 
   const buttons = {
@@ -201,7 +250,8 @@ function setupMobileControls() {
 
   for (const id in buttons) {
 
-    const button = document.getElementById(id);
+    const button =
+      document.getElementById(id);
 
     const key = buttons[id];
 
@@ -231,11 +281,16 @@ function setupMobileControls() {
 }
 
 
+// =========================
 // FLASHLIGHT BUTTON
+// =========================
+
 function setupFlashlight() {
 
   const button =
-    document.getElementById("flashlight");
+    document.getElementById(
+      "flashlight"
+    );
 
   if (!button) return;
 
@@ -243,11 +298,9 @@ function setupFlashlight() {
     "click",
     toggleFlashlight
   );
-
 }
 
 
-// TURN FLASHLIGHT ON/OFF
 function toggleFlashlight() {
 
   if (!flashlight) return;
@@ -262,22 +315,25 @@ function toggleFlashlight() {
 
   } else {
 
-    flashlight.intensity = 8;
+    flashlight.intensity = 15;
 
     document.getElementById(
       "flashlight"
     ).textContent = "🔦";
 
   }
-
 }
 
 
+// =========================
 // GAME LOOP
+// =========================
+
 function animate() {
 
   requestAnimationFrame(animate);
 
+  // MOVEMENT
   if (keys["w"]) {
     camera.position.z -= speed;
   }
@@ -296,30 +352,69 @@ function animate() {
 
   // HOUSE BOUNDARIES
   camera.position.x =
-    Math.max(-7, Math.min(7, camera.position.x));
+    Math.max(
+      -7,
+      Math.min(7, camera.position.x)
+    );
 
   camera.position.z =
-    Math.max(-7, Math.min(7, camera.position.z));
+    Math.max(
+      -7,
+      Math.min(7, camera.position.z)
+    );
 
-  renderer.render(scene, camera);
 
+  // =========================
+  // UPDATE FLASHLIGHT DIRECTION
+  // =========================
+
+  const direction =
+    new THREE.Vector3();
+
+  camera.getWorldDirection(
+    direction
+  );
+
+  flashlight.position.copy(
+    camera.position
+  );
+
+  flashlightTarget.position.copy(
+    camera.position
+  );
+
+  flashlightTarget.position.add(
+    direction.multiplyScalar(15)
+  );
+
+
+  renderer.render(
+    scene,
+    camera
+  );
 }
 
 
+// =========================
 // RESIZE
-window.addEventListener("resize", function() {
+// =========================
 
-  if (!camera || !renderer) return;
+window.addEventListener(
+  "resize",
+  function() {
 
-  camera.aspect =
-    window.innerWidth /
-    window.innerHeight;
+    if (!camera || !renderer) return;
 
-  camera.updateProjectionMatrix();
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
 
-  renderer.setSize(
-    window.innerWidth,
-    window.innerHeight
-  );
+    camera.updateProjectionMatrix();
 
-});
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+  }
+);
