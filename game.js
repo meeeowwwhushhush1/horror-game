@@ -1,7 +1,6 @@
 let scene, camera, renderer;
 let keys = {};
 let flashlight;
-let flashlightOn = true;
 
 const speed = 0.08;
 
@@ -16,10 +15,11 @@ function startGame() {
 }
 
 function createGame() {
+
   scene = new THREE.Scene();
 
-  scene.background = new THREE.Color(0x030303);
-  scene.fog = new THREE.Fog(0x030303, 2, 22);
+  scene.background = new THREE.Color(0x020202);
+  scene.fog = new THREE.Fog(0x020202, 1, 20);
 
   camera = new THREE.PerspectiveCamera(
     75,
@@ -39,22 +39,23 @@ function createGame() {
 
   document.body.appendChild(renderer.domElement);
 
-  // Very weak room lighting
-  const ambient = new THREE.AmbientLight(0xffffff, 0.08);
+  // VERY DARK AMBIENT LIGHT
+  const ambient = new THREE.AmbientLight(0xffffff, 0.04);
   scene.add(ambient);
 
   // FLASHLIGHT
   flashlight = new THREE.SpotLight(
     0xffffff,
-    4,
-    18,
-    Math.PI / 7,
+    8,
+    20,
+    Math.PI / 6,
     0.5,
     1
   );
 
-  flashlight.position.set(0, 1.55, 5);
-  flashlight.target.position.set(0, 1.4, -5);
+  flashlight.position.set(0, 1.6, 0);
+
+  flashlight.target.position.set(0, 1.6, -10);
 
   camera.add(flashlight);
   camera.add(flashlight.target);
@@ -65,14 +66,15 @@ function createGame() {
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(30, 30),
     new THREE.MeshStandardMaterial({
-      color: 0x292929
+      color: 0x333333
     })
   );
 
   floor.rotation.x = -Math.PI / 2;
+
   scene.add(floor);
 
-  // WALLS
+  // HOUSE WALLS
   createWall(0, 2, -8, 16, 4);
   createWall(-8, 2, 0, 4, 16);
   createWall(8, 2, 0, 4, 16);
@@ -80,60 +82,116 @@ function createGame() {
   createWall(-6, 2, 8, 4, 4);
   createWall(6, 2, 8, 4, 4);
 
-  // ROOM DIVIDERS
+  // INSIDE WALLS
   createWall(-3, 2, 2, 0.5, 8);
   createWall(3, 2, -3, 0.5, 6);
 
-  // FURNITURE
-  createBox(0, 1, -4, 2, 1, 1, 0x222222);
+  // TABLE
+  createBox(
+    0,
+    1,
+    -4,
+    2,
+    1,
+    1,
+    0x222222
+  );
 
   // EXIT DOOR
-  createBox(0, 2, -7.8, 2, 4, 0.3, 0x080808);
+  createBox(
+    0,
+    2,
+    -7.8,
+    2,
+    4,
+    0.3,
+    0x080808
+  );
 
   setupKeyboard();
   setupMobileControls();
   setupFlashlight();
+
+  document.getElementById("message").textContent =
+    "Find a way out...";
 }
 
+
+// CREATE WALL
 function createWall(x, y, z, width, depth) {
+
   const wall = new THREE.Mesh(
-    new THREE.BoxGeometry(width, 4, depth),
+    new THREE.BoxGeometry(
+      width,
+      4,
+      depth
+    ),
+
     new THREE.MeshStandardMaterial({
-      color: 0x3b3b3b
+      color: 0x444444
     })
   );
 
   wall.position.set(x, y, z);
+
   scene.add(wall);
 }
 
-function createBox(x, y, z, width, height, depth, color) {
+
+// CREATE OBJECT
+function createBox(
+  x,
+  y,
+  z,
+  width,
+  height,
+  depth,
+  color
+) {
+
   const box = new THREE.Mesh(
-    new THREE.BoxGeometry(width, height, depth),
+    new THREE.BoxGeometry(
+      width,
+      height,
+      depth
+    ),
+
     new THREE.MeshStandardMaterial({
       color: color
     })
   );
 
   box.position.set(x, y, z);
+
   scene.add(box);
 }
 
+
+// KEYBOARD
 function setupKeyboard() {
-  window.addEventListener("keydown", e => {
+
+  window.addEventListener("keydown", function(e) {
+
     keys[e.key.toLowerCase()] = true;
 
+    // F = flashlight
     if (e.key.toLowerCase() === "f") {
       toggleFlashlight();
     }
+
   });
 
-  window.addEventListener("keyup", e => {
+  window.addEventListener("keyup", function(e) {
+
     keys[e.key.toLowerCase()] = false;
+
   });
 }
 
+
+// MOBILE MOVEMENT
 function setupMobileControls() {
+
   const buttons = {
     up: "w",
     down: "s",
@@ -142,58 +200,126 @@ function setupMobileControls() {
   };
 
   for (const id in buttons) {
+
     const button = document.getElementById(id);
+
     const key = buttons[id];
 
-    button.addEventListener("touchstart", e => {
-      e.preventDefault();
-      keys[key] = true;
-    });
+    button.addEventListener(
+      "touchstart",
+      function(e) {
 
-    button.addEventListener("touchend", e => {
-      e.preventDefault();
-      keys[key] = false;
-    });
+        e.preventDefault();
+
+        keys[key] = true;
+
+      }
+    );
+
+    button.addEventListener(
+      "touchend",
+      function(e) {
+
+        e.preventDefault();
+
+        keys[key] = false;
+
+      }
+    );
+
   }
 }
 
+
+// FLASHLIGHT BUTTON
 function setupFlashlight() {
-  const button = document.getElementById("flashlight");
 
-  button.addEventListener("click", toggleFlashlight);
+  const button =
+    document.getElementById("flashlight");
+
+  if (!button) return;
+
+  button.addEventListener(
+    "click",
+    toggleFlashlight
+  );
+
 }
 
+
+// TURN FLASHLIGHT ON/OFF
 function toggleFlashlight() {
-  flashlightOn = !flashlightOn;
 
-  flashlight.intensity = flashlightOn ? 4 : 0;
+  if (!flashlight) return;
 
-  document.getElementById("flashlight").textContent =
-    flashlightOn ? "🔦" : "🌑";
+  if (flashlight.intensity > 0) {
+
+    flashlight.intensity = 0;
+
+    document.getElementById(
+      "flashlight"
+    ).textContent = "🌑";
+
+  } else {
+
+    flashlight.intensity = 8;
+
+    document.getElementById(
+      "flashlight"
+    ).textContent = "🔦";
+
+  }
+
 }
 
+
+// GAME LOOP
 function animate() {
+
   requestAnimationFrame(animate);
 
-  if (keys["w"]) camera.position.z -= speed;
-  if (keys["s"]) camera.position.z += speed;
-  if (keys["a"]) camera.position.x -= speed;
-  if (keys["d"]) camera.position.x += speed;
+  if (keys["w"]) {
+    camera.position.z -= speed;
+  }
 
-  camera.position.x = Math.max(-7, Math.min(7, camera.position.x));
-  camera.position.z = Math.max(-7, Math.min(7, camera.position.z));
+  if (keys["s"]) {
+    camera.position.z += speed;
+  }
+
+  if (keys["a"]) {
+    camera.position.x -= speed;
+  }
+
+  if (keys["d"]) {
+    camera.position.x += speed;
+  }
+
+  // HOUSE BOUNDARIES
+  camera.position.x =
+    Math.max(-7, Math.min(7, camera.position.x));
+
+  camera.position.z =
+    Math.max(-7, Math.min(7, camera.position.z));
 
   renderer.render(scene, camera);
+
 }
 
-window.addEventListener("resize", () => {
+
+// RESIZE
+window.addEventListener("resize", function() {
+
   if (!camera || !renderer) return;
 
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect =
+    window.innerWidth /
+    window.innerHeight;
+
   camera.updateProjectionMatrix();
 
   renderer.setSize(
     window.innerWidth,
     window.innerHeight
   );
+
 });
