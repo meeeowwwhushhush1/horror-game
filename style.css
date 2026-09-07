@@ -86,3 +86,16 @@ canvas {
   color: white;
   font-size: 22px;
 }
+#flashlight {
+  position: fixed;
+  right: 25px;
+  bottom: 35px;
+  z-index: 6;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: 1px solid #777;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 28px;
+}
