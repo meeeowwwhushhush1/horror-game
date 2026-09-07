@@ -1,6 +1,7 @@
 let scene, camera, renderer;
-let player;
 let keys = {};
+let flashlight;
+let flashlightOn = true;
 
 const speed = 0.08;
 
@@ -15,11 +16,10 @@ function startGame() {
 }
 
 function createGame() {
-
   scene = new THREE.Scene();
 
-  scene.background = new THREE.Color(0x050505);
-  scene.fog = new THREE.Fog(0x050505, 2, 25);
+  scene.background = new THREE.Color(0x030303);
+  scene.fog = new THREE.Fog(0x030303, 2, 22);
 
   camera = new THREE.PerspectiveCamera(
     75,
@@ -39,44 +39,44 @@ function createGame() {
 
   document.body.appendChild(renderer.domElement);
 
-  // LIGHT
-  const ambient = new THREE.AmbientLight(0xffffff, 0.25);
+  // Very weak room lighting
+  const ambient = new THREE.AmbientLight(0xffffff, 0.08);
   scene.add(ambient);
 
-  const light = new THREE.PointLight(0xffffff, 2, 12);
-  light.position.set(0, 3, 3);
-  scene.add(light);
+  // FLASHLIGHT
+  flashlight = new THREE.SpotLight(
+    0xffffff,
+    4,
+    18,
+    Math.PI / 7,
+    0.5,
+    1
+  );
+
+  flashlight.position.set(0, 1.55, 5);
+  flashlight.target.position.set(0, 1.4, -5);
+
+  camera.add(flashlight);
+  camera.add(flashlight.target);
+
+  scene.add(camera);
 
   // FLOOR
-  const floorGeometry = new THREE.PlaneGeometry(30, 30);
-
-  const floorMaterial = new THREE.MeshStandardMaterial({
-    color: 0x333333
-  });
-
   const floor = new THREE.Mesh(
-    floorGeometry,
-    floorMaterial
+    new THREE.PlaneGeometry(30, 30),
+    new THREE.MeshStandardMaterial({
+      color: 0x292929
+    })
   );
 
   floor.rotation.x = -Math.PI / 2;
   scene.add(floor);
 
-  // WALL MATERIAL
-  const wallMaterial = new THREE.MeshStandardMaterial({
-    color: 0x444444
-  });
-
-  // BACK WALL
+  // WALLS
   createWall(0, 2, -8, 16, 4);
-
-  // LEFT WALL
   createWall(-8, 2, 0, 4, 16);
-
-  // RIGHT WALL
   createWall(8, 2, 0, 4, 16);
 
-  // FRONT WALL WITH OPENING
   createWall(-6, 2, 8, 4, 4);
   createWall(6, 2, 8, 4, 4);
 
@@ -84,71 +84,56 @@ function createGame() {
   createWall(-3, 2, 2, 0.5, 8);
   createWall(3, 2, -3, 0.5, 6);
 
-  // TABLE
-  createBox(0, 1, -4, 2, 1, 1, 0x292929);
+  // FURNITURE
+  createBox(0, 1, -4, 2, 1, 1, 0x222222);
 
   // EXIT DOOR
-  createBox(0, 2, -7.8, 2, 4, 0.3, 0x111111);
+  createBox(0, 2, -7.8, 2, 4, 0.3, 0x080808);
 
-  player = camera;
+  setupKeyboard();
+  setupMobileControls();
+  setupFlashlight();
+}
 
+function createWall(x, y, z, width, depth) {
+  const wall = new THREE.Mesh(
+    new THREE.BoxGeometry(width, 4, depth),
+    new THREE.MeshStandardMaterial({
+      color: 0x3b3b3b
+    })
+  );
+
+  wall.position.set(x, y, z);
+  scene.add(wall);
+}
+
+function createBox(x, y, z, width, height, depth, color) {
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(width, height, depth),
+    new THREE.MeshStandardMaterial({
+      color: color
+    })
+  );
+
+  box.position.set(x, y, z);
+  scene.add(box);
+}
+
+function setupKeyboard() {
   window.addEventListener("keydown", e => {
     keys[e.key.toLowerCase()] = true;
+
+    if (e.key.toLowerCase() === "f") {
+      toggleFlashlight();
+    }
   });
 
   window.addEventListener("keyup", e => {
     keys[e.key.toLowerCase()] = false;
   });
-
-  setupMobileControls();
-}
-
-function createWall(x, y, z, width, depth) {
-
-  const geometry = new THREE.BoxGeometry(
-    width,
-    4,
-    depth
-  );
-
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x444444
-  });
-
-  const wall = new THREE.Mesh(
-    geometry,
-    material
-  );
-
-  wall.position.set(x, y, z);
-
-  scene.add(wall);
-}
-
-function createBox(x, y, z, width, height, depth, color) {
-
-  const geometry = new THREE.BoxGeometry(
-    width,
-    height,
-    depth
-  );
-
-  const material = new THREE.MeshStandardMaterial({
-    color: color
-  });
-
-  const box = new THREE.Mesh(
-    geometry,
-    material
-  );
-
-  box.position.set(x, y, z);
-
-  scene.add(box);
 }
 
 function setupMobileControls() {
-
   const buttons = {
     up: "w",
     down: "s",
@@ -157,7 +142,6 @@ function setupMobileControls() {
   };
 
   for (const id in buttons) {
-
     const button = document.getElementById(id);
     const key = buttons[id];
 
@@ -173,8 +157,22 @@ function setupMobileControls() {
   }
 }
 
-function animate() {
+function setupFlashlight() {
+  const button = document.getElementById("flashlight");
 
+  button.addEventListener("click", toggleFlashlight);
+}
+
+function toggleFlashlight() {
+  flashlightOn = !flashlightOn;
+
+  flashlight.intensity = flashlightOn ? 4 : 0;
+
+  document.getElementById("flashlight").textContent =
+    flashlightOn ? "🔦" : "🌑";
+}
+
+function animate() {
   requestAnimationFrame(animate);
 
   if (keys["w"]) camera.position.z -= speed;
@@ -182,7 +180,6 @@ function animate() {
   if (keys["a"]) camera.position.x -= speed;
   if (keys["d"]) camera.position.x += speed;
 
-  // Keep player inside house
   camera.position.x = Math.max(-7, Math.min(7, camera.position.x));
   camera.position.z = Math.max(-7, Math.min(7, camera.position.z));
 
@@ -190,12 +187,9 @@ function animate() {
 }
 
 window.addEventListener("resize", () => {
-
   if (!camera || !renderer) return;
 
-  camera.aspect =
-    window.innerWidth / window.innerHeight;
-
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
   renderer.setSize(
